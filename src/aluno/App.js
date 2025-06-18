@@ -2635,7 +2635,7 @@ const MOCK_NOTIFICACOES = [
 
 // --- Contexto Global ---
 const GlobalStateContext = createContext(undefined);
-const GlobalStateProvider = ({ children }) => {
+const GlobalStateProvider = ({ children, onLogout }) => {
   const [saldoMoedas, setSaldoMoedas] = useState(950);
   const [pontosBonus, setPontosBonus] = useState(0);
   const [carrinhoLoja, setCarrinhoLoja] = useState([]);
@@ -2691,6 +2691,7 @@ const GlobalStateProvider = ({ children }) => {
         removerDoCarrinhoLoja,
         limparCarrinhoLoja,
         calcularTotalCarrinhoLoja,
+        onLogout,
       }}
     >
       {children}
@@ -2783,9 +2784,31 @@ const AppHeader = ({ navigation, route, options }) => {
 // --- Conteúdo Personalizado do Drawer ---
 const CustomDrawerContent = (props) => {
   const [avatarError, setAvatarError] = useState(false);
+  const { onLogout } = useGlobalState();
 
   const handleAvatarError = () => {
     setAvatarError(true);
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Sair da conta",
+      "Tem certeza que deseja sair?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Sair",
+          style: "destructive",
+          onPress: () => {
+            if (onLogout) {
+              onLogout();
+            } else {
+              Alert.alert("Erro", "Não foi possível sair da conta.");
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -2822,9 +2845,7 @@ const CustomDrawerContent = (props) => {
         icon={({ color, size }) => (
           <Ionicons name="log-out-outline" color={color} size={size} />
         )}
-        onPress={() =>
-          Alert.alert("Sair", "Funcionalidade de Sair ainda não implementada.")
-        }
+        onPress={() => handleLogout()}
         labelStyle={styles.drawerItemLabel}
         style={styles.drawerItem}
       />
@@ -4549,10 +4570,31 @@ const PesquisarScreen = () => (
   </ScrollView>
 );
 const PerfilScreen = () => {
-  const { saldoMoedas } = useGlobalState();
+  const { saldoMoedas, onLogout } = useGlobalState();
   const [modoEdicao, setModoEdicao] = useState(false);
   const [dadosPerfil, setDadosPerfil] = useState(MOCK_PERFIL_USUARIO);
   const [dadosTemporarios, setDadosTemporarios] = useState({});
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Sair da conta",
+      "Tem certeza que deseja sair?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Sair",
+          style: "destructive",
+          onPress: () => {
+            if (onLogout) {
+              onLogout();
+            } else {
+              Alert.alert("Erro", "Não foi possível sair da conta.");
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const iniciarEdicao = () => {
     setDadosTemporarios({ ...dadosPerfil });
@@ -4757,6 +4799,7 @@ const PerfilScreen = () => {
 
         <TouchableOpacity
           style={[styles.perfilActionButton, styles.perfilBotaoSair]}
+          onPress={handleLogout}
         >
           <Ionicons
             name="log-out-outline"
@@ -5414,9 +5457,9 @@ const AppDrawerNavigator = () => (
 const ConditionalDisplay = ({ condition, children }) =>
   condition ? children : null;
 
-export default function App() {
+export default function App({ onLogout }) {
   return (
-    <GlobalStateProvider>
+    <GlobalStateProvider onLogout={onLogout}>
       <NavigationContainer>
         <AppDrawerNavigator />
       </NavigationContainer>
